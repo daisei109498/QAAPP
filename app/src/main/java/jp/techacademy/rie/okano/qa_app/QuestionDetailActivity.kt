@@ -153,8 +153,8 @@ class QuestionDetailActivity : AppCompatActivity() {
             val user = FirebaseAuth.getInstance().currentUser
             if (user != null) {
                         var data = HashMap<String,String>()
-                        data["genre"]="1"
-                        mFavoriteRef.push().setValue(data)
+                        data["genre"]=mQuestion.genre.toString()
+                        mFavoriteRef.setValue(data)
             }
         }
 

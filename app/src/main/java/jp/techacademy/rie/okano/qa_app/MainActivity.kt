@@ -135,24 +135,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-
-        // ログイン済みのユーザーを取得する
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user == null) {
-            // ログインしていなければお気に入り非表示
-            // ナビゲーションドロワーの設定
-            val toggle = ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.app_name, R.string.app_name)
-            drawer_layout.addDrawerListener(toggle)
-            toggle.syncState()
-
-        } else {
-            // ログインしてればお気に入り表示
-            // ナビゲーションドロワーの設定
-            val toggle = ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.app_name, R.string.app_name)
-            drawer_layout.addDrawerListener(toggle)
-            toggle.syncState()
-
-        }
+        // ログインしていなければお気に入り非表示
+        // ナビゲーションドロワーの設定
+        val toggle = ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.app_name, R.string.app_name)
+        drawer_layout.addDrawerListener(toggle)
+        toggle.syncState()
 
         nav_view.setNavigationItemSelectedListener(this)
 
@@ -171,12 +158,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             startActivity(intent)
         }
     }
+
     override fun onResume() {
         super.onResume()
         // 1:趣味を既定の選択とする
         if(mGenre == 0) {
-            onNavigationItemSelected(nav_view.menu.getItem(0))
+            onNavigationItemSelected(nav_view.menu.getItem(1))
         }
+        // ログイン済みのユーザーを取得する
+        val user = FirebaseAuth.getInstance().currentUser
+        nav_view.menu.findItem(R.id.nav_favorite).isVisible = user != null
     }
     // --- ここまで追加する ---
 
@@ -215,9 +206,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             mGenre = 4
         }else if (id == R.id.nav_favorite) {
             toolbar.title = "お気に入り"
-            mGenre = 99
+            mGenre = 0
         }
         drawer_layout.closeDrawer(GravityCompat.START)
+
+        if (id == R.id.nav_favorite) {
+            val intent = Intent(applicationContext, FavoriteActivity::class.java)
+            startActivity(intent)
+            return true
+        }
 
         // --- ここから ---
         // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
