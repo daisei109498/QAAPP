@@ -41,64 +41,54 @@ class FavoriteActivity : AppCompatActivity() {
             var mQuestionRef: DatabaseReference
             // Firebase
             mDatabaseReference = FirebaseDatabase.getInstance().reference
-            mQuestionRef = mDatabaseReference.child(ContentsPATH).child(genre)
-            mQuestionRef.addChildEventListener(mQestionEventListener)
+            mQuestionRef = mDatabaseReference.child(ContentsPATH).child(genre).child(dataSnapshot.key.toString())
 
-        }
+            try {
+                mQuestionRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        Log.d("MainActivity2", snapshot.key.toString())
+                        val map = snapshot.value as Map<String, String>
+                        val title = map["title"] ?: ""
+                        val body = map["body"] ?: ""
+                        val name = map["name"] ?: ""
+                        val uid = map["uid"] ?: ""
+                        val imageString = map["image"] ?: ""
+                        val bytes =
+                            if (imageString.isNotEmpty()) {
+                                Base64.decode(imageString, Base64.DEFAULT)
+                            } else {
+                                byteArrayOf()
+                            }
 
-        override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+                        val answerArrayList = ArrayList<Answer>()
+                        val answerMap = map["answers"] as Map<String, String>?
+                        if (answerMap != null) {
+                            for (key in answerMap.keys) {
+                                val temp = answerMap[key] as Map<String, String>
+                                val answerBody = temp["body"] ?: ""
+                                val answerName = temp["name"] ?: ""
+                                val answerUid = temp["uid"] ?: ""
+                                val answer = Answer(answerBody, answerName, answerUid, key)
+                                answerArrayList.add(answer)
+                            }
+                        }
 
-        }
+                        val question = Question(
+                            title, body, name, uid, snapshot.key ?: "",
+                            mGenre, bytes, answerArrayList
+                        )
 
-        override fun onChildRemoved(p0: DataSnapshot) {
+                        Log.d("MainActivity3", snapshot.key.toString())
 
-        }
+                        mQestionArrayList.add(question)
+                        mAdapter.notifyDataSetChanged()
+                    }
 
-        override fun onChildMoved(p0: DataSnapshot, p1: String?) {
-
-        }
-
-        override fun onCancelled(p0: DatabaseError) {
-
-        }
-    }
-
-    private val mQestionEventListener = object : ChildEventListener {
-        override fun onChildAdded(dataSnapshot2: DataSnapshot, s: String?) {
-            Log.d("MainActivity2", dataSnapshot2.key.toString())
-            val map = dataSnapshot2.value as Map<String, String>
-            val title = map["title"] ?: ""
-            val body = map["body"] ?: ""
-            val name = map["name"] ?: ""
-            val uid = map["uid"] ?: ""
-            val imageString = map["image"] ?: ""
-            val bytes =
-                if (imageString.isNotEmpty()) {
-                    Base64.decode(imageString, Base64.DEFAULT)
-                } else {
-                    byteArrayOf()
-                }
-
-            val answerArrayList = ArrayList<Answer>()
-            val answerMap = map["answers"] as Map<String, String>?
-            if (answerMap != null) {
-                for (key in answerMap.keys) {
-                    val temp = answerMap[key] as Map<String, String>
-                    val answerBody = temp["body"] ?: ""
-                    val answerName = temp["name"] ?: ""
-                    val answerUid = temp["uid"] ?: ""
-                    val answer = Answer(answerBody, answerName, answerUid, key)
-                    answerArrayList.add(answer)
-                }
+                    override fun onCancelled(firebaseError: DatabaseError) {}
+                })
+            }catch (e: Throwable) {
+               //
             }
-
-            val question = Question(title, body, name, uid, dataSnapshot2.key ?: "",
-                mGenre, bytes, answerArrayList)
-
-            Log.d("MainActivity3",dataSnapshot2.key.toString())
-
-            mQestionArrayList.add(question)
-            mAdapter.notifyDataSetChanged()
         }
 
         override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
